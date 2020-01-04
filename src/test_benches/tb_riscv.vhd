@@ -1,0 +1,700 @@
+--###############################################################################
+--# tb_riscv.vhd  - Testbench the basic RV32I instrucions function.
+--#
+--# Part of the Rudi-RV32I project
+--#
+--# See https://github.com/hamsternz/Rudi-RV32I
+--#
+--# MIT License
+--#
+--###############################################################################
+--#
+--# Copyright (c) 2020 Mike Field
+--#
+--# Permission is hereby granted, free of charge, to any person obtaining a copy
+--# of this software and associated documentation files (the "Software"), to deal
+--# in the Software without restriction, including without limitation the rights
+--# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+--# copies of the Software, and to permit persons to whom the Software is
+--# furnished to do so, subject to the following conditions:
+--#
+--# The above copyright notice and this permission notice shall be included in all
+--# copies or substantial portions of the Software.
+--#
+--# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+--# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+--# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+--# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+--# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+--# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+--# SOFTWARE.
+--#
+--###############################################################################
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity tb_riscv is
+end tb_riscv;
+
+architecture Behavioral of tb_riscv is
+  
+    component top_level is
+          port ( clk          : in  STD_LOGIC;
+
+                 uart_rxd_out : out STD_LOGIC;
+                 uart_txd_in  : in  STD_LOGIC;
+
+                 debug_sel    : in  STD_LOGIC_VECTOR(4 downto 0);
+                 debug_data   : out STD_LOGIC_VECTOR(31 downto 0)); 
+    end component;
+
+    signal clk             : std_logic := '0';
+    signal uart_rxd_out    : STD_LOGIC;
+    signal uart_txd_in     : STD_LOGIC;
+    signal debug_sel       : STD_LOGIC_VECTOR( 4 downto 0) := "00001";
+    signal debug_data      : STD_LOGIC_VECTOR(31 downto 0); 
+    signal cache_last_addr : std_logic := '0';
+begin
+
+process
+   begin
+       wait for 5 ns;
+       clk <= '0';
+       wait for 5 ns;
+       clk <= '1';
+   end process;
+   
+process
+   begin
+      if 1 = 1 then 
+       wait for 50 ns; -- to come out of reset
+       debug_sel  <= "00001";
+       wait for 0.5 ns;
+
+       report "0: XOR r01 r01 => r01";
+       assert debug_data = x"00000000" report "register r01 not 0x0" severity FAILURE;
+
+       debug_sel  <= "00010";
+       wait for  10 ns;
+       report "1: XOR r02 r02 => r02";
+       assert debug_data = x"00000000" report "register r02 not 0x0" severity FAILURE;
+       
+       debug_sel  <= "00001";
+       wait for  10 ns;
+       report "2: ADDI r01 1 => r01";
+       assert debug_data = x"00000001" report "register r01 not 0x1" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "3: ADD r01 r01 => r02";
+       assert debug_data = x"00000002" report "FAIL: register r02 not 0x2" severity FAILURE;
+      
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "4: ADD r01 r02 => r02";
+       assert debug_data = x"00000003" report "FAIL: register r02 not 0x3" severity FAILURE;
+      
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "5: ADDI r02 r01 => r02";
+       assert debug_data = x"00000004" report "FAIL: register r02 not 0x4" severity FAILURE;
+      
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "6: LUI FFFFF000 => r02";
+       assert debug_data = x"FFFFF000" report "FAIL: register r02 not 0xFFFFF000" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "7: SRAI r02, 2 => r02";
+       assert debug_data = x"FFFFFC00" report "FAIL: register r02 not 0xFFFFFC00" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "8: SRLI r02, 4 => r02";
+       assert debug_data = x"0FFFFFC0" report "FAIL: register r02 not 0x0FFFFFC0" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report " 9: SLLI r02, 2 => r02";
+       assert debug_data = x"3FFFFF00" report "FAIL: register r02 not 0x3FFFFF00" severity FAILURE;
+
+-- MEMORY ACCESS INSTRUCTIONS
+      
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "10: AUPCI 0x12345000 => r02";
+       assert debug_data = x"02345028" report "FAIL: register r02 not 0x02345028" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "11: SB r02, 0 - not checked yet";
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "12: SB r02, 1 - not checked yet";
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "13: SB r02, 2 - not checked yet";
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "14: SB r02, 3 - not checked yet";
+     
+       debug_sel   <= "00011";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "15: LW 0, r03";
+       assert debug_data = x"28282828" report "FAIL: register r03 not 0x28282828" severity FAILURE;
+
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "16: SH r02, 0 - not checked yet";
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "17: SH r02, 2 - not checked yet";
+
+       debug_sel   <= "00011";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "18: LW 0, r03";
+       assert debug_data = x"50285028" report "FAIL: register r03 not 0x50285028" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "19: LUI 0x89ABD000 => r02";
+       assert debug_data = x"89ABD000" report "FAIL: register r02 not 0x89ABD000" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "20: ADDI r02, 0xFFFFFDEF => r02";
+       assert debug_data = x"89ABCDEF" report "FAIL: register r02 not 0x89ABCDEF" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "21: SW r02, 0 - not checked yet";
+
+       debug_sel   <= "00011";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "22: LW 0, r03";
+       assert debug_data = x"89ABCDEF" report "FAIL: register r03 not 0x89ABCDEF" severity FAILURE;
+
+-- SIGNED lOADS
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       if cache_last_addr = '0' then
+         wait for  10 ns;  
+       end if;
+       report "23: LH 0, r02";
+       assert debug_data = x"FFFFCDEF" report "FAIL: register r02 not 0xFFFFCDEF" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "24: LH 2, r02";
+       assert debug_data = x"FFFF89AB" report "FAIL: register r02 not 0xFFFF89AB" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "25: LB 0, r02";
+       assert debug_data = x"FFFFFFEF" report "FAIL: register r02 not 0xFFFFFFEF" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "26: LB 1, r02";
+       assert debug_data = x"FFFFFFCD" report "FAIL: register r02 not 0xFFFFFFCD" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       wait for  10 ns;  -- MEMORY STALL
+       report "27: LB 2, r02";
+       assert debug_data = x"FFFFFFAB" report "FAIL: register r02 not 0xFFFFFFAB" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       wait for  10 ns;  -- MEMORY STALL
+       report "28: LB 3, r02";
+       assert debug_data = x"FFFFFF89" report "FAIL: register r02 not 0xFFFFFF89" severity FAILURE;
+
+-- UNSIGNED lOADS
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "29: LHU 0, r02";
+       assert debug_data = x"0000CDEF" report "FAIL: register r02 not 0x0000CDEF" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "30: LHU 2, r02";
+       assert debug_data = x"000089AB" report "FAIL: register r02 not 0x000089AB" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "31: LBU 0, r02";
+       assert debug_data = x"000000EF" report "FAIL: register r02 not 0x000000EF" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       wait for  10 ns;  -- MEMORY STALL
+       report "32: LBU 1, r02";
+       assert debug_data = x"000000CD" report "FAIL: register r02 not 0x000000CD" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       wait for  10 ns;  -- MEMORY STALL
+       report "33: LBU 2, r02";
+       assert debug_data = x"000000AB" report "FAIL: register r02 not 0x000000AB" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       wait for  10 ns;  -- MEMORY STALL
+       report "34: LBU 3, r02";
+       assert debug_data = x"00000089" report "FAIL: register r02 not 0x00000089" severity FAILURE;
+---- ALU OPERATIONS 
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "35: LUI r02, 0x66666000";
+       assert debug_data = x"66666000" report "FAIL: register r02 not 0x66666000" severity FAILURE;
+
+       debug_sel   <= "00010";
+       wait for  10 ns;
+       report "36: ADDI r02, 0x666, r02";
+       assert debug_data = x"66666666" report "FAIL: register r02 not 0x66666666" severity FAILURE;
+
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "37: LUI r03, 0xCCCCD000";
+       assert debug_data = x"CCCCD000" report "FAIL: register r03 not 0xCCCCD000" severity FAILURE;
+
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "38: ADDI r03, 0xCCC, r02";
+       assert debug_data = x"CCCCCCCC" report "FAIL: register r03 not 0xCCCCCCCC" severity FAILURE;
+
+       -- r02 set to 66666666, r03 set to CCCCCCCCC
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "39: ADD  r02, r03, r04";
+       assert debug_data = x"33333332" report "FAIL: register r04 not 0x33333332" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "40: ADD  r03, r02, r04";
+       assert debug_data = x"33333332" report "FAIL: register r04 not 0x33333332" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "41: SUB  r02, r03, r04";
+       assert debug_data = x"9999999A" report "FAIL: register r04 not 0x9999999A" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "42: SUB  r03, r02, r04";
+       assert debug_data = x"66666666" report "FAIL: register r04 not 0x66666666" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "43: SLL  r02, r03, r04";
+       assert debug_data = x"66666000" report "FAIL: register r04 not 0x66666000" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "44: SLL  r03, r02, r04";
+       assert debug_data = x"33333300" report "FAIL: register r04 not 0x33333300" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "45: SLT  r02, r03, r04";
+       assert debug_data = x"00000000" report "FAIL: register r04 not 0x00000000" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "46: SLT  r03, r02, r04";
+       assert debug_data = x"00000001" report "FAIL: register r04 not 0x00000001" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "47: SLTU r02, r03, r04";
+       assert debug_data = x"00000001" report "FAIL: register r04 not 0x00000001" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "48: SLTU r03, r02, r04";
+       assert debug_data = x"00000000" report "FAIL: register r04 not 0x00000000" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "49: XOR  r02, r03, r04";
+       assert debug_data = x"AAAAAAAA" report "FAIL: register r04 not 0xAAAAAAAA" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "50: XOR  r03, r02, r04";
+       assert debug_data = x"AAAAAAAA" report "FAIL: register r04 not 0xAAAAAAAA" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "51: SRL  r02, r03, r04";
+       assert debug_data = x"00066666" report "FAIL: register r04 not 0x00066666" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "52: SRL  r03, r02, r04";
+       assert debug_data = x"03333333" report "FAIL: register r04 not 0x03333333" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "53: SRA  r02, r03, r04";
+       assert debug_data = x"00066666" report "FAIL: register r04 not 0x00066666" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "54: SRA  r03, r02, r04";
+       assert debug_data = x"FF333333" report "FAIL: register r04 not 0xFF333333" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "55: OR   r02, r03, r04";
+       assert debug_data = x"EEEEEEEE" report "FAIL: register r04 not 0xEEEEEEEE" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "56: OR   r03, r02, r04";
+       assert debug_data = x"EEEEEEEE" report "FAIL: register r04 not 0xEEEEEEEE" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "57: AND  r02, r03, r04";
+       assert debug_data = x"44444444" report "FAIL: register r04 not 0x44444444" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "58: AND  r03, r02, r04";
+       assert debug_data = x"44444444" report "FAIL: register r04 not 0x44444444" severity FAILURE;
+
+---- Immediate ALU ops
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "59: ADDI  r03, 0x666, r04";
+       assert debug_data = x"CCCCD332" report "FAIL: register r04 not 0xCCCCD332" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "60: SLTI  r03, 0x666, r04";
+       assert debug_data = x"00000001" report "FAIL: register r04 not 0x00000001" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "61: SLTUI r03, 0x666, r04";
+       assert debug_data = x"00000000" report "FAIL: register r04 not 0x00000000" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "62: XORI  r03, 0x666, r04";
+       assert debug_data = x"CCCCCAAA" report "FAIL: register r04 not 0xCCCCCAAA" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "63: ORI   r03, 0x666, r04";
+       assert debug_data = x"CCCCCEEE" report "FAIL: register r04 not 0xCCCCCEEE" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "64: ANDI  r03, 0x666, r04";
+       assert debug_data = x"00000444" report "FAIL: register r04 not 0x00000444" severity FAILURE;
+
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "65: SLLI  r03, 0x6, r04";
+       assert debug_data = x"33333300" report "FAIL: register r04 not 0x33333300" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "66: SRLI  r03, 0x6, r04";
+       assert debug_data = x"03333333" report "FAIL: register r04 not 0x03333333" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "67: SRAI  r03, 0x6, r04";
+       assert debug_data = x"FF333333" report "FAIL: register r04 not 0xFF333333" severity FAILURE;
+
+
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "68: ADDI  r03 <= r00 + 0x000";
+       assert debug_data = x"00000000" report "FAIL: register r03 not 0x00000000" severity FAILURE;
+
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "69: JAL   +8, r04";
+       assert debug_data = x"F0000118" report "FAIL: register r04 not 0xF0000118" severity FAILURE;
+
+       report "70: ORI   r03 <= r03 | 0x001 is skipped";
+
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "71: ORI   r03 <= r03 | 0x002";
+       assert debug_data = x"00000002" report "FAIL: register r03 not 0x00000002" severity FAILURE;
+
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "72: ORI   r03 <= r03 | 0x004";
+       assert debug_data = x"00000006" report "FAIL: register r03 not 0x00000006" severity FAILURE;
+
+       -----------------------------------------------------------------
+       ------ Testing conditional branches with r03 = 8 and r04 = 8
+       -----------------------------------------------------------------
+       -- XOR  r02 <= r02 ^ r02
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "73: XOR   r02 <= r02 ^ r02";
+       assert debug_data = x"00000000" report "FAIL: register r02 not 0x00000000" severity FAILURE;
+
+       -- ADDI r03 <= r02 + 0x008
+       debug_sel   <= "00011";
+       wait for  10 ns; 
+       report "74: ADDI   r03 <= r02 + 0x8";
+       assert debug_data = x"00000008" report "FAIL: register r03 not 0x00000008" severity FAILURE;
+
+       -- ADDI r04 <= r02 + 0x008
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "75: ADDI   r04 <= r02 + 0x8";
+       assert debug_data = x"00000008" report "FAIL: register r04 not 0x00000008" severity FAILURE;
+
+       -- BEQ  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "76: BEQ r03,r04,+8";
+       assert debug_data = x"00000000" report "FAIL: register r02 not 0x00000000" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x001
+       report "77: ORI r02 <= r02 | 0x1  -  should be skipped";
+
+       -- BNE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "78: BNE r03,r04,+8";
+       assert debug_data = x"00000000" report "FAIL: register r02 not 0x00000000" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x002
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "79: ORI r02 <= r02 | 0x2";
+       assert debug_data = x"00000002" report "FAIL: register r02 not 0x00000002" severity FAILURE;
+
+       -- BLT  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "80: BLT r03,r04,+8";
+
+       -- ORI  r02 <= r02 | 0x004
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "81: ORI r02 <= r02 | 0x4";
+       assert debug_data = x"00000006" report "FAIL: register r02 not 0x00000006" severity FAILURE;
+
+       -- BGE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "82: BGE r03,r04,+8";
+
+       -- ORI  r02 <= r02 | 0x008
+       report "83: ORI r02 <= r02 | 0x8  -  should be skipped";
+
+       -- BLTU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "84: BLTU r03,r04,+8";
+
+       -- ORI  r02 <= r02 | 0x010
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "85: ORI r02 <= r02 | 0x10";
+       assert debug_data = x"00000016" report "FAIL: register r02 not 0x00000016" severity FAILURE;
+
+       -- BGEU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "86: BGEU r03,r04,+8";
+
+       -- ORI  r02 <= r02 | 0x020
+       report "87: ORI r02 <= r02 | 0x20  -  should be skipped";
+
+       -----------------------------------------------------------------
+       ------ Testing conditional branches with r03 = 8 and r04 = 16
+       -----------------------------------------------------------------
+       -- XOR  r02 <= r02 ^ r02
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "88: XOR   r02 <= r02 ^ r02";
+       assert debug_data = x"00000000" report "FAIL: register r02 not 0x00000000" severity FAILURE;
+
+       -- ADDI r04 <= r03 + 0x008
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "89: ADDI   r04 <= r03 + 0x8";
+       assert debug_data = x"00000010" report "FAIL: register r04 not 0x00000010" severity FAILURE;
+
+       -- BEQ  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "90: BEQ  r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x001
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "91: ORI r02 <= r02 | 0x01";
+       assert debug_data = x"00000001" report "FAIL: register r02 not 0x00000001" severity FAILURE;
+
+       -- BNE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "92: BNE  r03, r04,+8";
+       assert debug_data = x"00000001" report "FAIL: register r02 not 0x00000001" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x002
+       report "93: ORI r02 <= r02 | 0x2  -  should be skipped";
+
+       -- BLT  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "94: BLT  r03, r04,+8";
+       assert debug_data = x"00000001" report "FAIL: register r02 not 0x00000001" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x004
+       report "95: ORI r02 <= r02 | 0x4  -  should be skipped";
+
+       -- BGE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "96: BGE  r03, r04,+8";
+       assert debug_data = x"00000001" report "FAIL: register r02 not 0x00000001" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x008
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "97: ORI r02 <= r02 | 0x08";
+       assert debug_data = x"00000009" report "FAIL: register r02 not 0x00000009" severity FAILURE;
+
+       -- BLTU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "98: BLTU r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x010
+       report "99: ORI r02 <= r02 | 0x10  -  should be skipped";
+
+       -- BGEU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "100: BGEU r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x020
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "101: ORI r02 <= r02 | 0x08";
+       assert debug_data = x"00000029" report "FAIL: register r02 not 0x00000029" severity FAILURE;
+
+       -----------------------------------------------------------------
+       ------ Testing conditional branches with r03 = 8 and r04 = -16
+       -----------------------------------------------------------------
+       -- XOR  r02 <= r02 ^ r02
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "102: XOR   r02 <= r02 ^ r02";
+       assert debug_data = x"00000000" report "FAIL: register r02 not 0x00000000" severity FAILURE;
+
+       -- ADDI r04 <= r02 + 0xFFFFFFE0  (-32)
+       debug_sel   <= "00100";
+       wait for  10 ns; 
+       report "103: ADDI   r04 <= r02 + 0xFE0";
+       assert debug_data = x"FFFFFFE0" report "FAIL: register r04 not 0xFFFFFFE0" severity FAILURE;
+
+       -- BEQ  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "104: BEQ  r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x001
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "105: ORI r02 <= r02 | 0x01";
+       assert debug_data = x"00000001" report "FAIL: register r02 not 0x00000001" severity FAILURE;
+
+       -- BNE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "106: BNE  r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x002
+       report "107: ORI r02 <= r02 | 0x02  -  should be skipped";
+
+       -- BLT  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "108: BLT  r03, r04,+8";
+
+       -- ORI  r02 <= r02 | 0x004
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "109: ORI r02 <= r02 | 0x04";
+       assert debug_data = x"00000005" report "FAIL: register r02 not 0x00000005" severity FAILURE;
+
+       -- BGE  r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "110: BGE  r03, r04,+8";
+       assert debug_data = x"00000005" report "FAIL: register r02 not 0x00000005" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x008
+       report "111: ORI r02 <= r02 | 0x08  -  should be skipped";
+
+       -- BLTU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "112: BLTU r03, r04,+8";
+       assert debug_data = x"00000005" report "FAIL: register r02 not 0x00000005" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x010
+       report "113: ORI r02 <= r02 | 0x10  -  should be skipped";
+
+       -- BGEU r03, r04, +8
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "114: BGEU r03, r04,+8";
+       assert debug_data = x"00000005" report "FAIL: register r02 not 0x00000005" severity FAILURE;
+
+       -- ORI  r02 <= r02 | 0x020
+       debug_sel   <= "00010";
+       wait for  10 ns; 
+       report "115: ORI r02 <= r02 | 0x20";
+       assert debug_data = x"00000025" report "FAIL: register r02 not 0x00000025" severity FAILURE;
+
+       report "All tests complete";
+       end if;
+       wait;
+       
+   end process;
+
+i_top_level: top_level port map(
+                 clk          => clk,
+
+                 uart_rxd_out => uart_rxd_out,
+                 uart_txd_in  => uart_txd_in,
+
+                 debug_sel    => debug_sel,
+                 debug_data   => debug_data); 
+end Behavioral;
+

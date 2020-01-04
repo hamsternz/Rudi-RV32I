@@ -1,0 +1,14 @@
+backups
+backup.sh
+c/test
+bitstreams/basys3_top_level.bit
+vivado/.Xil/
+vivado/riscv.cache/
+vivado/riscv.hw/
+vivado/riscv.ip_user_files/
+vivado/riscv.runs/
+vivado/riscv.sim/
+vivado/riscv.xpr
+vivado/tb_riscv_behav.wcfg
+vivado/usage_statistics_webtalk.html
+vivado/usage_statistics_webtalk.xml
