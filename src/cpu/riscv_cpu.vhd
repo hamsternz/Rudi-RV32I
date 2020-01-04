@@ -214,6 +214,7 @@ architecture Behavioral of riscv_cpu is
            take_branch      : in  STD_LOGIC;
            pc_jump_offset   : in  STD_LOGIC_VECTOR(31 downto 0);
            pc_branch_offset : in  STD_LOGIC_VECTOR(31 downto 0);
+           pc_jumpreg_offset: in  STD_LOGIC_VECTOR(31 downto 0);
 
            a                : in  STD_LOGIC_VECTOR(31 downto 0);
            
@@ -350,6 +351,7 @@ i_program_counter: program_counter port map (
        take_branch      => take_branch,
        pc_jump_offset   => decode_pc_jump_offset,
        pc_branch_offset => decode_pc_branch_offset,
+       pc_jumpreg_offset=> decode_immed, 
        a                => reg_read_data_a,
        -- outputs
        pc           => pc,

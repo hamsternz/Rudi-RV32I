@@ -45,6 +45,7 @@ entity program_counter is
            take_branch        : in  STD_LOGIC;
            pc_jump_offset     : in  STD_LOGIC_VECTOR(31 downto 0);
            pc_branch_offset   : in  STD_LOGIC_VECTOR(31 downto 0);
+           pc_jumpreg_offset  : in  STD_LOGIC_VECTOR(31 downto 0);
            a                  : in  STD_LOGIC_VECTOR(31 downto 0);
            
            pc                 : out STD_LOGIC_VECTOR(31 downto 0);
@@ -108,7 +109,7 @@ process(pc_mode, current_pc, a, pc_branch_offset, pc_jump_offset, take_branch, m
                         add_RHS := to_unsigned(4,32);
                     end if;
                 when PC_JMP_RELATIVE             => add_RHS := unsigned(pc_jump_offset);
-                when PC_JMP_REG_RELATIVE         => add_RHS := unsigned(pc_jump_offset);
+                when PC_JMP_REG_RELATIVE         => add_RHS := unsigned(pc_jumpreg_offset);
                 when others                      => add_RHS := x"00000000";
             end case;
             next_instr <= (add_LHS  + add_RHS) AND x"FFFFFFFC";
