@@ -20,17 +20,17 @@ A full 32-bit system, with 4kB of Program memory and 4kB of RAM and a serial por
 
 Project structure:
 
-./c  - files to support programming the CPU in C
-./src - HDL Sources
-./src/test_benches - Test benches
-./src/program_memory - HDL for RAMs and ROMs
-./src/systems - HDL for complete systems  - CPUs, RAMs, ROMs and perhipherals
-./src/boards - Booard specific HDL and constraints
-./src/bus - CPU bus to peripheral bus adapters 
-./src/peripheral - Various peripherals
-./src/cpu - HDL for the Rudi-RV32I CPU
-./bitstreams - destintation for bitstreams from the ./vivado/build.tcl script
-./vivado - Scripts for building and testing in vivado
+* ./c  - files to support programming the CPU in C
+* ./src - HDL Sources
+* ./src/test_benches - Test benches
+* ./src/program_memory - HDL for RAMs and ROMs
+* ./src/systems - HDL for complete systems  - CPUs, RAMs, ROMs and perhipherals
+* ./src/boards - Booard specific HDL and constraints
+* ./src/bus - CPU bus to peripheral bus adapters 
+* ./src/peripheral - Various peripherals
+* ./src/cpu - HDL for the Rudi-RV32I CPU
+* ./bitstreams - destintation for bitstreams from the ./vivado/build.tcl script
+* ./vivado - Scripts for building and testing in vivado
 
 Current known issues:
 
