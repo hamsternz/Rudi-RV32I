@@ -9,7 +9,7 @@ It has been designed with three key things in mind:
 - Minimize required resources
 - Maximize Understandability
 
-=== THIS IS CURRENTLY IN ALPHA TESTING ===
+== THIS IS CURRENTLY IN ALPHA TESTING 
 
 Rudi-RV32 is somewhat unique as it features no pipelining at all. All instructions can complete in a single cycle, including the shift operations. Memory operations might take longer as the external bus can stall the CPU if required. 
 
@@ -38,6 +38,4 @@ Current known issues:
 - Still in active development and testing - most likely has unknown issues.
 - Current serial peripheral is TX only
 
-=========================================================================
 If you find this useful, consider buying me a pizza or dinner via PayPal.
-=========================================================================
