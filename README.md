@@ -3,7 +3,7 @@ Rudi-RV32I
 
 Rudi-RV32I is a simple, small, RISC-V processor, supporting the RV32I instruction set, that can be programmed using GCC.
 
-It has been designed with three key things in mind:
+This was a holiday project over Christmas 2019/2020. It has been designed with three key things in mind:
 
 - Minimize complexity
 - Minimize required resources
@@ -38,4 +38,12 @@ Current known issues:
 - Still in active development and testing - most likely has unknown issues.
 - Current serial peripheral is TX only
 
-If you find this useful, consider buying me a pizza or dinner via PayPal.
+-- Getting started
+
+* Install Xilinx Vivado
+* Install RISC-V GNU toolchain in /opt/riscv - use the rv32ia ISA and ilp32 ABI
+* In the './c' directory run 'make' to build the memory images from "test.c"
+* In the "./vivado" directory, run "build.sh" to build the bitstream
+* You should now have a bitstream for Basys3 in ./bitstreams - program it and connect to the serail port at 19200.
+
+If you find this useful, consider buying me a virutal pizza, virtual beer or virtual dinner via PayPal.
