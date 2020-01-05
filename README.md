@@ -32,10 +32,16 @@ Project structure:
 * ./bitstreams - destintation for bitstreams from the ./vivado/build.tcl script
 * ./vivado - Scripts for building and testing in vivado
 
+Current Peripherals:
+
+* 19200 serial console
+* 32-bit wide GPIO
+
 Current known issues:
 
-- Unaligned memory accesses are not supported by the current bus bridge design
-- Still in active development and testing - most likely has unknown issues.
+* Unaligned memory accesses are not supported by the current bus bridge design
+* Still in active development and testing - most likely has unknown issues.
+* Needs more documentation on how to configure and use
 
 Getting started:
 
