@@ -36,9 +36,8 @@ Current known issues:
 
 - Unaligned memory accesses are not supported by the current bus bridge design
 - Still in active development and testing - most likely has unknown issues.
-- Current serial peripheral is TX only
 
--- Getting started
+Getting started:
 
 * Install Xilinx Vivado
 * Install RISC-V GNU toolchain in /opt/riscv - use the rv32ia ISA and ilp32 ABI
