@@ -57,20 +57,23 @@ end entity;
 architecture Behavioral of peripheral_serial is
     signal data_valid   : STD_LOGIC := '1';
 
-    signal fifo_wr      : STD_LOGIC := '0';
-    signal fifo_wr_data : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-    signal fifo_rd      : STD_LOGIC := '0';
-    signal fifo_rd_data : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-    signal fifo_full    : STD_LOGIC := '0';
-    signal fifo_empty   : STD_LOGIC := '1';
+    -- Make the bus side of the perhipheral look like a FIFO
+    signal fifo_wr         : STD_LOGIC := '0';
+    signal fifo_wr_data    : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+    signal fifo_rd         : STD_LOGIC := '0';
+    signal fifo_rd_data    : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+    signal fifo_full       : STD_LOGIC := '0';
+    signal fifo_empty      : STD_LOGIC := '1';
 
-    signal data_tx_sr   : STD_LOGIC_VECTOR(9 downto 0) := (others => '1');    
-    signal busy_tx_sr   : STD_LOGIC_VECTOR(9 downto 0) := (others => '0');    
-    signal baud_tick    : STD_LOGIC := '0';
-    signal baud_counter : UNSIGNED(29 downto 0) := (others => '0');  -- Good to about 1GHz
+    signal data_tx_sr      : STD_LOGIC_VECTOR(9 downto 0) := (others => '1');    
+    signal busy_tx_sr      : STD_LOGIC_VECTOR(9 downto 0) := (others => '0');    
+    signal data_rx_sr      : STD_LOGIC_VECTOR(37 downto 0) := (others => '1');    
+    signal baud_tick       : STD_LOGIC := '0';
+    signal baud_tick_4x    : STD_LOGIC := '0';
+    signal tick_divider    : UNSIGNED(1 downto 0) := (others => '0'); 
+    signal baud_rx_counter : UNSIGNED(29 downto 0) := (others => '0');  -- Good to about 1GHz
 
 begin
-   serial_tx <= data_tx_sr(0);
    fifo_full <= busy_tx_sr(0);
 
 process(bus_enable, bus_write_mask, data_valid)
@@ -86,12 +89,13 @@ end process;
 process(clk) 
 begin
     if rising_edge(clk) then
+        ----------------------------------
         -- Processing outbound serial data
-        if busy_tx_sr(0) = '1' then
-            if baud_tick = '1' then
-                busy_tx_sr <= '0' & busy_tx_sr(busy_tx_sr'high downto 1);
-                data_tx_sr <= '1' & data_tx_sr(data_tx_sr'high downto 1);
-            end if;
+        ----------------------------------
+        if baud_tick = '1' then
+            serial_tx  <= data_tx_sr(0);
+            busy_tx_sr <= '0' & busy_tx_sr(busy_tx_sr'high downto 1);
+            data_tx_sr <= '1' & data_tx_sr(data_tx_sr'high downto 1);
         end if;
 
         if fifo_wr = '1' and busy_tx_sr(0) = '0' then
@@ -99,7 +103,9 @@ begin
             busy_tx_sr <= (others => '1');
         end if;
 
+        ----------------------------------
         -- Handle the bus request
+        ----------------------------------
         data_valid <= '0';
         bus_read_data <= x"00000000";
         fifo_wr    <= '0';
@@ -134,13 +140,41 @@ begin
             end if;           
         end if;
 
-        -- Work out where the next baud tick is
-        if baud_counter < baud_rate then
-           baud_counter <= baud_counter - baud_rate + clock_freq - 1;
-           baud_tick    <= '1';
+        ---------------------------------------
+        -- Process incoming data
+        ---------------------------------------
+        if fifo_rd = '1' then
+           fifo_empty <= '1';
+        end if;
+
+        if baud_tick_4x = '1' then
+           -- Look for start and stop bits
+           if data_rx_sr(2 downto 0) = "000" AND data_rx_sr(37) = '1' then
+              -- Put data in the 1-deep fifo
+              fifo_rd_data <= data_rx_sr(33) & data_rx_sr(29) & data_rx_sr(25) & data_rx_sr(21) &
+                              data_rx_sr(17) & data_rx_sr(13) & data_rx_sr(9) & data_rx_sr(5);
+              fifo_empty <= '0';
+              -- reset the shift register
+              data_rx_sr <= (others => '1');
+           else
+              data_rx_sr <= serial_rx & data_rx_sr(data_rx_sr'high downto 1);
+           end if;
+        end if;
+
+        -----------------------------------------
+        -- Work out where the next baud ticks are
+        -----------------------------------------
+        baud_tick_4x <= '0';
+        baud_tick    <= '0';
+        if baud_rx_counter < baud_rate*4 then
+           baud_rx_counter <= baud_rx_counter - baud_rate*4 + clock_freq;
+           if tick_divider = "11" then
+              baud_tick    <= '1';
+           end if;
+           baud_tick_4x    <= '1';
+           tick_divider <= tick_divider + 1;
         else
-           baud_counter <= baud_counter - baud_rate;
-           baud_tick    <= '0';
+           baud_rx_counter <= baud_rx_counter - baud_rate*4;
         end if;
     end if;
 end process;

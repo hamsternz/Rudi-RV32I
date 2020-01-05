@@ -35,16 +35,30 @@ char text[] = "Hello world!\r\n";
 char az[] = "Text ";  
 char bz[] = " characters long\r\n";  
 
-int putchar(int c) {
-  volatile char * serial           = (char *)0xE0000000;
-  volatile char * serial_tx_status = (char *)0xE0000004;
+volatile char *serial_tx        = (char *)0xE0000000;
+volatile char *serial_tx_full   = (char *)0xE0000004;
+volatile char *serial_rx        = (char *)0xE0000008;
+volatile char *serial_rx_empty  = (char *)0xE000000C;
+
+
+int getchar(void) {
 
   // Wait until status is zero 
-  while(*serial_tx_status) {
+  while(*serial_rx_empty) {
   }
 
   // Output character
-  *serial = c;
+  return *serial_rx;
+}
+
+int putchar(int c) {
+
+  // Wait until status is zero 
+  while(*serial_tx_full) {
+  }
+
+  // Output character
+  *serial_tx = c;
   return c;
 }
 
@@ -69,14 +83,19 @@ int mylen(char *s) {
 
 int test_program(void) {
   puts("System restart\r\n");  
-  while(1) {
-    puts("String is ");
-    putchar('0'+mylen(az));
-    puts(" characters long\r\n");
 
-    puts(az);
-    putchar('0'+mylen(az));
-    puts(bz);
+  /* Check some junk in memory */
+  puts("String is ");
+  putchar('0'+mylen(az));
+  puts(" characters long\r\n");
+
+  puts(az);
+  putchar('0'+mylen(az));
+  puts(bz);
+
+  /* Run a serial port echo */
+  while(1) {
+    putchar(getchar());
   }
   return 0;
 }

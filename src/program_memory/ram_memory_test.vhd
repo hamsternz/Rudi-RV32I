@@ -58,6 +58,10 @@ architecture Behavioral of ram_memory is
          8 => x"00000a0d",
          9 => x"74786554",
          10 => x"00000020",
+         11 => x"e0000000",
+         12 => x"e0000004",
+         13 => x"e0000008",
+         14 => x"e000000c",
        others => (others=>'0'));
     signal data_valid : STD_LOGIC := '1';
 begin

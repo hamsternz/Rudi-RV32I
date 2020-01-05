@@ -69,8 +69,10 @@ opt_design
 place_design 
 # Route Design
 route_design
+
+# Write the bitstream	
+write_bitstream -force -file ../bitstreams/basys3_top_level.bit
+
+# Generate reports
 report_timing -nworst 1
 report_utilization -hierarchical
-	
-# Write out bitfile
-write_bitstream -force -file ../bitstreams/basys3_top_level.bit
