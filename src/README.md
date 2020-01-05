@@ -1,3 +1,5 @@
+./src - The FPGA HDL source
+
 This directory contains:
 
 * boards         - Board specific files (HDL and constraints)
