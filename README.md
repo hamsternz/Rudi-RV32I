@@ -68,4 +68,4 @@ This design is licensed under the MIT license, so you are pretty much free to do
 
 If you find this really useful please drop me an email to say thanks. I'll love to hear what you are doing with it.
 
-If you find this really useful or is used commercially, consider buying me a virutal pizza, virtual beer or virtual dinner via PayPal.
+If you find this really useful or is used commercially, consider buying me a virtual pizza, virtual beer or virtual dinner via PayPal.
