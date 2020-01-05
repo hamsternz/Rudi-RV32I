@@ -39,19 +39,21 @@ use UNISIM.vcomponents.all;
 entity basys3_top_level is
   port ( clk100mhz    : in  STD_LOGIC;
          btnC         : in  STD_LOGIC;
+         led          : inout std_logic_vector(15 downto 0);
          uart_rxd_out : out STD_LOGIC := '1';
          uart_txd_in  : in  STD_LOGIC);
 end entity;
 
 architecture Behavioral of basys3_top_level is
-    component top_level is
+    component top_level_expanded is
     generic ( clock_freq    : natural := 50000000;
               minimize_size : STD_LOGIC := '1');
-    port ( clk          : in  STD_LOGIC;
-           uart_rxd_out : out STD_LOGIC := '1';
-           uart_txd_in  : in  STD_LOGIC;
-           debug_sel    : in  STD_LOGIC_VECTOR(4 downto 0);
-           debug_data   : out STD_LOGIC_VECTOR(31 downto 0));
+    port ( clk              : in  STD_LOGIC;
+           uart_rxd_out     : out STD_LOGIC := '1';
+           uart_txd_in      : in  STD_LOGIC;
+           gpio             : inout std_logic_vector(15 downto 0);
+           debug_sel        : in  STD_LOGIC_VECTOR(4 downto 0);
+           debug_data       : out STD_LOGIC_VECTOR(31 downto 0));
     end component;
     signal clk : STD_LOGIC;
     signal fb  : STD_LOGIC;
@@ -119,10 +121,11 @@ begin
       CLKFBIN => fb      -- 1-bit input: Feedback clock
    );
 
-i_top_level: top_level generic map ( clock_freq => 50000000, minimize_size => '1') port map (
+i_top_level_expanded: top_level_expanded generic map ( clock_freq => 50000000, minimize_size => '1') port map (
     clk          => clk,
     uart_rxd_out => uart_rxd_out,
     uart_txd_in  => uart_txd_in,
+    gpio         => led,
     debug_sel    => "00000",
     debug_data   => open);
 end Behavioral;

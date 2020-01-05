@@ -39,7 +39,8 @@ volatile char *serial_tx        = (char *)0xE0000000;
 volatile char *serial_tx_full   = (char *)0xE0000004;
 volatile char *serial_rx        = (char *)0xE0000008;
 volatile char *serial_rx_empty  = (char *)0xE000000C;
-
+volatile int  *gpio_value       = (int  *)0xE0000010;
+volatile int  *gpio_direction   = (int  *)0xE0000014;
 
 int getchar(void) {
 
@@ -94,8 +95,10 @@ int test_program(void) {
   puts(bz);
 
   /* Run a serial port echo */
+  *gpio_direction = 0xFFFF;
   while(1) {
     putchar(getchar());
+    *gpio_value = *gpio_value + 1;
   }
   return 0;
 }
