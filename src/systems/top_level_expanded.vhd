@@ -145,7 +145,7 @@ architecture Behavioral of top_level_expanded is
     signal m2_bus_write_data : STD_LOGIC_VECTOR(31 downto 0);
     signal m2_bus_read_data  : STD_LOGIC_VECTOR(31 downto 0);
 
-    component bus_expander is
+    component bus_expander_clocked is
     port ( clk           : in  STD_LOGIC;
            -- Upstream (slave) interfaces
            s0_bus_busy       : out STD_LOGIC;
@@ -339,7 +339,7 @@ i_program_memory: program_memory port map (
        bus_write_data => m1_bus_write_data,
        bus_read_data  => m1_bus_read_data);
 
-i_bus_expander: bus_expander port map (
+i_bus_expander_clocked: bus_expander_clocked port map (
        clk            => clk,
          -- Upstream (slave) interfaces
        s0_bus_enable     => m2_bus_enable,

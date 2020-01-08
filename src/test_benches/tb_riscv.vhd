@@ -39,22 +39,24 @@ end tb_riscv;
 
 architecture Behavioral of tb_riscv is
   
-    component top_level is
-          port ( clk          : in  STD_LOGIC;
-
-                 uart_rxd_out : out STD_LOGIC;
-                 uart_txd_in  : in  STD_LOGIC;
-
-                 debug_sel    : in  STD_LOGIC_VECTOR(4 downto 0);
-                 debug_data   : out STD_LOGIC_VECTOR(31 downto 0)); 
+    component top_level_expanded is
+    generic ( clock_freq    : natural := 50000000;
+              minimize_size : STD_LOGIC := '1');
+    port ( clk              : in  STD_LOGIC;
+           uart_rxd_out     : out STD_LOGIC := '1';
+           uart_txd_in      : in  STD_LOGIC;
+           gpio             : inout std_logic_vector(15 downto 0);
+           debug_sel        : in  STD_LOGIC_VECTOR(4 downto 0);
+           debug_data       : out STD_LOGIC_VECTOR(31 downto 0));
     end component;
-
+    
     signal clk             : std_logic := '0';
     signal uart_rxd_out    : STD_LOGIC;
     signal uart_txd_in     : STD_LOGIC;
     signal debug_sel       : STD_LOGIC_VECTOR( 4 downto 0) := "00001";
     signal debug_data      : STD_LOGIC_VECTOR(31 downto 0); 
     signal cache_last_addr : std_logic := '0';
+    signal gpio            : STD_LOGIC_VECTOR(15 downto 0); 
 begin
 
 process
@@ -67,7 +69,7 @@ process
    
 process
    begin
-      if 1 = 1 then 
+      if 1 = 0 then 
        wait for 50 ns; -- to come out of reset
        debug_sel  <= "00001";
        wait for 0.5 ns;
@@ -693,11 +695,13 @@ process
        
    end process;
 
-i_top_level: top_level port map(
+i_top_level_expanded: top_level_expanded generic map ( clock_freq => 50000000, minimize_size => '0') port map(
                  clk          => clk,
 
                  uart_rxd_out => uart_rxd_out,
                  uart_txd_in  => uart_txd_in,
+                 
+                 gpio         => gpio,
 
                  debug_sel    => debug_sel,
                  debug_data   => debug_data); 
