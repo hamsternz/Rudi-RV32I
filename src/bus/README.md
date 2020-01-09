@@ -5,10 +5,8 @@ Bus bridges connect the CPU to peripherals
 - README.md	- this file
 - bus_bridge.vhd - Can connect the top level CPU bus to three devices (usually RAM, ROM and one peripheral)
 - bus_expander.vhd - Expands one device port to three more device ports
-
-Currently the adapters use purely combinatorial logic, so the more devices added
-the slower the final design will run. In the future I want to add a clocked 
-bus_expander, that will avoid this limit on global performance.
+- bus_bridge_clocked.vhd - Adds a cycle of latency to improve CPU timing
+- bus_expander_clocked.vhd - Adds a cycle of latency to improve CPU timing
 
 NOTE: Output bus addresses are masked using the "window mask", setting these bits
 to zero. So say you connect a bus to 0xE000000 with the mask of 0xFFFF0000, the
