@@ -55,6 +55,7 @@ read_vhdl ../src/program_memory/ram_memory_test.vhd
 
 # The 'external' CPU bus - bridge, RAM and Serial peripherals
 read_vhdl ../src/bus/bus_bridge.vhd
+read_vhdl ../src/bus/bus_bridge_clocked.vhd
 read_vhdl ../src/bus/bus_expander.vhd
 read_vhdl ../src/bus/bus_expander_clocked.vhd
 read_vhdl ../src/peripheral/peripheral_gpio.vhd
