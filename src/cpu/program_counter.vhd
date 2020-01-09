@@ -94,6 +94,7 @@ process(pc_mode, current_pc, a, pc_branch_offset, pc_jump_offset, take_branch, m
     variable add_RHS      : unsigned(31 downto 0);
     begin
         if minimize_size = '1' then
+            --  Uses 74 LUTs   
             case pc_mode is
                 when PC_JMP_RELATIVE_CONDITIONAL => add_LHS := unsigned(current_pc);
                 when PC_JMP_RELATIVE             => add_LHS := unsigned(current_pc);
@@ -114,18 +115,18 @@ process(pc_mode, current_pc, a, pc_branch_offset, pc_jump_offset, take_branch, m
             end case;
             next_instr <= (add_LHS  + add_RHS) AND x"FFFFFFFC";
         else
-            case pc_mode is
-                when PC_JMP_RELATIVE_CONDITIONAL =>
-                    if take_branch = '1' then
-                        next_instr <= (unsigned(current_pc)  + unsigned(pc_branch_offset)) AND x"FFFFFFFC";
-                    else
-                        next_instr <= current_pc + 4;
-                    end if;
-                when PC_JMP_RELATIVE             => next_instr <= (unsigned(current_pc)  + unsigned(pc_jump_offset)) AND x"FFFFFFFC";
-                when PC_JMP_REG_RELATIVE         => next_instr <= (unsigned(a)           + unsigned(pc_jumpreg_offset)) AND x"FFFFFFFC";
-                when PC_RESET_STATE              => next_instr <= x"F0000000";
-                when others                      => next_instr <= x"F0000000";
-            end case;
+            --  Uses 155 LUTs   
+            if take_branch = '1' then
+                next_instr <= (unsigned(current_pc)  + unsigned(pc_branch_offset)) AND x"FFFFFFFC";
+            else
+                case pc_mode is
+                    when PC_JMP_RELATIVE_CONDITIONAL => next_instr <= current_pc + 4;
+                    when PC_JMP_RELATIVE             => next_instr <= (unsigned(current_pc)  + unsigned(pc_jump_offset)) AND x"FFFFFFFC";
+                    when PC_JMP_REG_RELATIVE         => next_instr <= (unsigned(a)           + unsigned(pc_jumpreg_offset)) AND x"FFFFFFFC";
+                    when PC_RESET_STATE              => next_instr <= x"F0000000";
+                    when others                      => next_instr <= x"F0000000";
+                end case;
+            end if;
         end if;
     end process;
 
