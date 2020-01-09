@@ -17,7 +17,7 @@ Rudi-RV32 is somewhat unique as it features no pipelining at all. All instructio
 complete in a single cycle, including the shift operations. Memory operations might take
 longer as the external bus can stall the CPU if required. 
 
-Even with this lack of pipelining, the processor can run at > 70MHz in an Artix-7 grade
+Even with this lack of pipelining, the processor can run at > 80MHz in an Artix-7 grade
 1 FPGA, and a compact "minimal version" can run at over 50MHz.
 
 A full 32-bit system, with 4kB of Program memory and 4kB of RAM and a serial port can
@@ -42,6 +42,7 @@ bus and serial console.
 
 * 19200 serial console
 * 32-bit wide GPIO
+* Millisecond counter
 
 ## Current known issues / gotchas
 
