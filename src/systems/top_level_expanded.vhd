@@ -86,7 +86,7 @@ architecture Behavioral of top_level_expanded is
 
     end component;
 
-    component bus_bridge is
+    component bus_bridge_clocked is
     port ( clk           : in  STD_LOGIC;
            cpu_bus_busy      : out STD_LOGIC;
            cpu_bus_addr      : in  STD_LOGIC_VECTOR(31 downto 0);
@@ -257,7 +257,7 @@ process(clk)
       end if;
    end process;
 
-i_riscv_cpu: riscv_cpu port map(
+i_riscv_cpu: riscv_cpu port map (
        clk           => clk,
        instr_reg     => instr_reg,
                  
@@ -278,7 +278,7 @@ i_riscv_cpu: riscv_cpu port map(
        debug_data    => debug_data); 
 
 
-i_bus_bridge: bus_bridge port map (
+i_bus_bridge_clocked: bus_bridge_clocked port map (
        clk               => clk,
        cpu_bus_busy      => cpu_bus_busy,
        cpu_bus_addr      => cpu_bus_addr,

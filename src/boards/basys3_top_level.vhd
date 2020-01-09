@@ -72,7 +72,7 @@ begin
       CLKOUT4_DIVIDE => 1,
       CLKOUT5_DIVIDE => 1,
       CLKOUT6_DIVIDE => 1,
-      CLKOUT0_DIVIDE_F => 13.75,   -- Divide amount for CLKOUT0 (1.000-128.000).
+      CLKOUT0_DIVIDE_F => 20.000,   -- Divide amount for CLKOUT0 (1.000-128.000).
       -- CLKOUT0_DUTY_CYCLE - CLKOUT6_DUTY_CYCLE: Duty cycle for each CLKOUT (0.01-0.99).
       CLKOUT0_DUTY_CYCLE => 0.5,
       CLKOUT1_DUTY_CYCLE => 0.5,
@@ -121,7 +121,7 @@ begin
       CLKFBIN => fb      -- 1-bit input: Feedback clock
    );
 
-i_top_level_expanded: top_level_expanded generic map ( clock_freq => 50000000, minimize_size => '0') port map (
+i_top_level_expanded: top_level_expanded generic map ( clock_freq => 50000000, minimize_size => '1') port map (
     clk          => clk,
     uart_rxd_out => uart_rxd_out,
     uart_txd_in  => uart_txd_in,
