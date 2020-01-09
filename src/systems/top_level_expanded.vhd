@@ -199,6 +199,13 @@ architecture Behavioral of top_level_expanded is
     signal m21_bus_write_data : STD_LOGIC_VECTOR(31 downto 0);
     signal m21_bus_read_data  : STD_LOGIC_VECTOR(31 downto 0);
 
+    signal m22_bus_busy       : STD_LOGIC;
+    signal m22_bus_addr       : STD_LOGIC_VECTOR(31 downto 2);
+    signal m22_bus_enable     : STD_LOGIC;
+    signal m22_bus_write_mask : STD_LOGIC_VECTOR( 3 downto 0);
+    signal m22_bus_write_data : STD_LOGIC_VECTOR(31 downto 0);
+    signal m22_bus_read_data  : STD_LOGIC_VECTOR(31 downto 0);
+
     component ram_memory is
     port ( clk            : in  STD_LOGIC;
            bus_enable     : in  STD_LOGIC;
@@ -210,6 +217,20 @@ architecture Behavioral of top_level_expanded is
     end   component;
 
     component peripheral_gpio is
+    port ( clk            : in  STD_LOGIC;
+
+           bus_busy       : out STD_LOGIC;
+           bus_addr       : in  STD_LOGIC_VECTOR(3 downto 2);
+           bus_enable     : in  STD_LOGIC;
+           bus_write_mask : in  STD_LOGIC_VECTOR(3 downto 0);
+           bus_write_data : in  STD_LOGIC_VECTOR(31 downto 0);
+           bus_read_data  : out STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+
+           gpio           : inout STD_LOGIC_VECTOR);
+    end component;
+
+    component peripheral_millis is
+    generic ( clock_freq : natural);
     port ( clk            : in  STD_LOGIC;
 
            bus_busy       : out STD_LOGIC;
@@ -372,13 +393,13 @@ i_bus_expander_clocked: bus_expander_clocked port map (
 
        -- Not used
        m2_window_base    => x"00000020",
-       m2_window_mask    => x"FFFFFFE0",
-       m2_bus_busy       => '0',
-       m2_bus_addr       => open,
-       m2_bus_enable     => open,
-       m2_bus_write_mask => open,
-       m2_bus_write_data => open,
-       m2_bus_read_data  => (others => '0')
+       m2_window_mask    => x"FFFFFFF0",
+       m2_bus_busy       => m22_bus_busy,
+       m2_bus_addr       => m22_bus_addr,
+       m2_bus_enable     => m22_bus_enable,
+       m2_bus_write_mask => m22_bus_write_mask,
+       m2_bus_write_data => m22_bus_write_data,
+       m2_bus_read_data  => m22_bus_read_data
     );
 
 i_peripheral_serial: peripheral_serial generic map ( 
@@ -395,6 +416,7 @@ i_peripheral_serial: peripheral_serial generic map (
        serial_rx      => uart_txd_in,
        serial_tx      => uart_rxd_out);
 
+
 i_peripheral_gpio: peripheral_gpio port map ( 
        clk            => clk,
        bus_enable     => m21_bus_enable,
@@ -403,6 +425,17 @@ i_peripheral_gpio: peripheral_gpio port map (
        bus_write_mask => m21_bus_write_mask,
        bus_write_data => m21_bus_write_data,
        bus_read_data  => m21_bus_read_data,
+       gpio           => gpio);
+
+
+i_peripheral_millis: peripheral_millis generic map ( clock_freq => clock_freq) port map ( 
+       clk            => clk,
+       bus_enable     => m22_bus_enable,
+       bus_addr       => m22_bus_addr(3 downto 2),
+       bus_busy       => m22_bus_busy, 
+       bus_write_mask => m22_bus_write_mask,
+       bus_write_data => m22_bus_write_data,
+       bus_read_data  => m22_bus_read_data,
        gpio           => gpio);
 
 end Behavioral;
