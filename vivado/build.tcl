@@ -61,6 +61,7 @@ read_vhdl ../src/bus/bus_expander_clocked.vhd
 read_vhdl ../src/peripheral/peripheral_gpio.vhd
 read_vhdl ../src/peripheral/peripheral_ram.vhd
 read_vhdl ../src/peripheral/peripheral_serial.vhd
+read_vhdl ../src/peripheral/peripheral_millis.vhd
 
 # board specific stuff
 read_vhdl ../src/boards/basys3_top_level.vhd
