@@ -50,7 +50,7 @@ entity peripheral_serial is
          bus_read_data  : out STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
 
          serial_rx      : in  STD_LOGIC;
-         serial_tx      : out STD_LOGIC := '0');
+         serial_tx      : out STD_LOGIC := '1');
 
 end entity;
 
