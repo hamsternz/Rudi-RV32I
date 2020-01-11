@@ -303,7 +303,7 @@ i_riscv_cpu: riscv_cpu port map (
        debug_data    => debug_data); 
 
 
-i_bus_bridge_clocked: bus_bridge generic map (use_clk => bus_bridge_use_clk)  port map (
+i_bus_bridge: bus_bridge generic map (use_clk => bus_bridge_use_clk)  port map (
        clk               => clk,
        cpu_bus_busy      => cpu_bus_busy,
        cpu_bus_addr      => cpu_bus_addr,

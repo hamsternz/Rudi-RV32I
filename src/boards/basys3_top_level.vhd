@@ -125,9 +125,9 @@ begin
 
 i_top_level_expanded: top_level_expanded generic map ( 
         clock_freq           => 50000000, 
-        bus_bridge_use_clk   => '0',
-        bus_expander_use_clk => '0',
-        cpu_minimize_size    => '1'
+        bus_bridge_use_clk   => '1',
+        bus_expander_use_clk => '1',
+        cpu_minimize_size    => '0'
     ) port map (
         clk          => clk,
         uart_rxd_out => uart_rxd_out,

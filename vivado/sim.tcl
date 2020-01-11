@@ -13,6 +13,7 @@ read_vhdl ../src/cpu/shifter.vhd
 
 # Top level system design (CPU + Memories + Peripherals)
 read_vhdl ../src/systems/top_level.vhd
+read_vhdl ../src/systems/top_level_expanded.vhd
 
 # The memory containing test code
 read_vhdl ../src/program_memory/program_memory.vhd
