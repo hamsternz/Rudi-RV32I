@@ -36,8 +36,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
 entity top_level_expanded is
-  generic ( clock_freq    : natural   := 50000000;
-            minimize_size : std_logic := '1');
+  generic ( clock_freq           : natural   := 50000000;
+            bus_bridge_use_clk   : std_logic := '1';
+            bus_expander_use_clk : std_logic := '1';
+            cpu_minimize_size    : std_logic := '1');
   port ( clk          : in    STD_LOGIC;
          uart_rxd_out : out   STD_LOGIC := '1';
          uart_txd_in  : in    STD_LOGIC;
@@ -86,7 +88,8 @@ architecture Behavioral of top_level_expanded is
 
     end component;
 
-    component bus_bridge_clocked is
+    component bus_bridge is
+    generic ( use_clk           : in  STD_LOGIC);
     port ( clk           : in  STD_LOGIC;
            cpu_bus_busy      : out STD_LOGIC;
            cpu_bus_addr      : in  STD_LOGIC_VECTOR(31 downto 0);
@@ -284,7 +287,7 @@ i_riscv_cpu: riscv_cpu port map (
        instr_reg     => instr_reg,
                  
        reset         => reset_sr(0),
-       minimize_size => minimize_size,
+       minimize_size => cpu_minimize_size,
                  
        bus_busy      => cpu_bus_busy,
        bus_addr      => cpu_bus_addr,
@@ -300,7 +303,7 @@ i_riscv_cpu: riscv_cpu port map (
        debug_data    => debug_data); 
 
 
-i_bus_bridge_clocked: bus_bridge_clocked port map (
+i_bus_bridge_clocked: bus_bridge generic map (use_clk => bus_bridge_use_clk)  port map (
        clk               => clk,
        cpu_bus_busy      => cpu_bus_busy,
        cpu_bus_addr      => cpu_bus_addr,
@@ -361,7 +364,7 @@ i_program_memory: program_memory port map (
        bus_write_data => m1_bus_write_data,
        bus_read_data  => m1_bus_read_data);
 
-i_bus_expander: bus_expander generic map (use_clk => '1') port map (
+i_bus_expander: bus_expander generic map (use_clk => bus_expander_use_clk) port map (
        clk               => clk,
          -- Upstream (slave) interfaces
        s0_bus_enable     => m2_bus_enable,

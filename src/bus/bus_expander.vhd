@@ -114,22 +114,36 @@ begin
    with use_clk select write_data <= latched_write_data when '1', s0_bus_write_data  when others;
    with use_clk select write_mask <= latched_write_mask when '1', s0_bus_write_mask  when others;
 
-process(idle, addr,
+process(idle, addr, s0_bus_enable,
         m0_window_mask, m0_window_base,
         m1_window_mask, m1_window_base,
         m2_window_mask, m2_window_base)
    begin
       -- work out which port is busy (if any)
       active <= (others => '0');
-      if use_clk = '0' or idle = '0' then
-         if (addr(31 downto 2) and m0_window_mask(31 downto 2)) = m0_window_base(31 downto 2) then
-            active(0) <= '1';
+      if use_clk = '1' then
+         if idle = '0' then
+            if (addr(31 downto 2) and m0_window_mask(31 downto 2)) = m0_window_base(31 downto 2) then
+               active(0) <= '1';
+            end if;
+            if (addr(31 downto 2) and m1_window_mask(31 downto 2)) = m1_window_base(31 downto 2) then
+               active(1) <= '1';
+            end if;
+            if (addr(31 downto 2) and m2_window_mask(31 downto 2)) = m2_window_base(31 downto 2) then
+               active(2) <= '1';
+            end if;
          end if;
-         if (addr(31 downto 2) and m1_window_mask(31 downto 2)) = m1_window_base(31 downto 2) then
-            active(1) <= '1';
-         end if;
-         if (addr(31 downto 2) and m2_window_mask(31 downto 2)) = m2_window_base(31 downto 2) then
-            active(2) <= '1';
+      else
+         if s0_bus_enable = '1' then
+            if (addr(31 downto 2) and m0_window_mask(31 downto 2)) = m0_window_base(31 downto 2) then
+               active(0) <= '1';
+            end if;
+            if (addr(31 downto 2) and m1_window_mask(31 downto 2)) = m1_window_base(31 downto 2) then
+               active(1) <= '1';
+            end if;
+            if (addr(31 downto 2) and m2_window_mask(31 downto 2)) = m2_window_base(31 downto 2) then
+               active(2) <= '1';
+            end if;
          end if;
       end if;
    end process;

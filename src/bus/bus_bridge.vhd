@@ -35,7 +35,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
 entity bus_bridge is
-  port ( clk           : in  STD_LOGIC;
+  generic (use_clk         : in STD_LOGIC);
+  port ( clk               : in  STD_LOGIC;
          cpu_bus_busy      : out STD_LOGIC;
          cpu_bus_addr      : in  STD_LOGIC_VECTOR(31 downto 0);
          cpu_bus_width     : in  STD_LOGIC_VECTOR( 1 downto 0);  
@@ -75,47 +76,67 @@ end entity;
 
 
 architecture Behavioral of bus_bridge is
-   signal active     : std_logic_vector( 2 downto 0);
-   signal write_mask : STD_LOGIC_VECTOR( 3 downto 0);
-   signal write_data : STD_LOGIC_VECTOR(31 downto 0);
-   signal read_data  : STD_LOGIC_VECTOR(31 downto 0);
+   signal active             : std_logic_vector( 2 downto 0);
+   signal addr               : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+   signal write              : std_logic;
+   signal width              : std_logic_vector( 1 downto 0);
+   signal write_data         : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+   signal latched_addr       : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+   signal latched_write      : std_logic;
+   signal latched_width      : std_logic_vector( 1 downto 0);
+   signal latched_write_data : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+   signal write_mask         : STD_LOGIC_VECTOR( 3 downto 0);
+   signal write_data_aligned : STD_LOGIC_VECTOR(31 downto 0);
+   signal read_data          : STD_LOGIC_VECTOR(31 downto 0);
+
+   signal idle : STD_LOGIC := '0';
+   signal busy : STD_LOGIC := '0';
+   
 begin
 
    m0_bus_enable     <= active(0);
-   m0_bus_addr       <= cpu_bus_addr(31 downto 2) AND NOT m0_window_mask(31 downto 2);
-   m0_bus_write_data <= write_data;
+   m0_bus_addr       <= addr(31 downto 2) AND NOT m0_window_mask(31 downto 2);
+   m0_bus_write_data <= write_data_aligned;
    m0_bus_write_mask <= write_mask;
 
    m1_bus_enable     <= active(1);
-   m1_bus_addr       <= cpu_bus_addr(31 downto 2) AND NOT m1_window_mask(31 downto 2);
-   m1_bus_write_data <= write_data;
+   m1_bus_addr       <= addr(31 downto 2) AND NOT m1_window_mask(31 downto 2);
+   m1_bus_write_data <= write_data_aligned;
    m1_bus_write_mask <= write_mask;
 
    m2_bus_enable     <= active(2);
-   m2_bus_addr       <= cpu_bus_addr(31 downto 2) AND NOT m2_window_mask(31 downto 2);
-   m2_bus_write_data <= write_data;
+   m2_bus_addr       <= addr(31 downto 2) AND NOT m2_window_mask(31 downto 2);
+   m2_bus_write_data <= write_data_aligned;
    m2_bus_write_mask <= write_mask;
 
-   cpu_bus_busy <= (m0_bus_busy and active(0))
-                or (m1_bus_busy and active(1))
-                or (m2_bus_busy and active(2));
+   cpu_bus_busy <= busy;
 
+   -- Tell the CPU interface when we are busy.
+   busy <= (cpu_bus_enable and idle and use_clk)
+         or (m0_bus_busy and active(0))
+         or (m2_bus_busy and active(2))
+         or (m1_bus_busy and active(1));
 
-process(cpu_bus_dout, cpu_bus_addr)
+   with use_clk select addr        <= latched_addr       when '1', cpu_bus_addr  when others;
+   with use_clk select write       <= latched_write      when '1', cpu_bus_write when others;
+   with use_clk select write_data  <= latched_write_data when '1', cpu_bus_dout  when others;
+   with use_clk select width       <= latched_width      when '1', cpu_bus_width when others;
+
+process(write_data, addr)
    begin
-      case cpu_bus_addr(1 downto 0) is
-         when "00"   => write_data <= cpu_bus_dout(31 downto 0);
-         when "01"   => write_data <= cpu_bus_dout(23 downto 0) & x"00";
-         when "10"   => write_data <= cpu_bus_dout(15 downto 0) & x"0000";
-         when others => write_data <= cpu_bus_dout( 7 downto 0) & x"000000";
+      case addr(1 downto 0) is
+         when "00"   => write_data_aligned <= write_data(31 downto 0);
+         when "01"   => write_data_aligned <= write_data(23 downto 0) & x"00";
+         when "10"   => write_data_aligned <= write_data(15 downto 0) & x"0000";
+         when others => write_data_aligned <= write_data( 7 downto 0) & x"000000";
       end case;
    end process;
 
-process(cpu_bus_write, cpu_bus_width, cpu_bus_addr)
+process(write, width, addr)
    begin
       write_mask <= "0000";
-      if cpu_bus_write = '1' then
-         case cpU_bus_width & cpu_bus_addr(1 downto 0) is
+      if write = '1' then
+         case width & addr(1 downto 0) is
             when "0000" => write_mask <= "0001";
             when "0001" => write_mask <= "0010";
             when "0010" => write_mask <= "0100";
@@ -136,38 +157,64 @@ process(cpu_bus_write, cpu_bus_width, cpu_bus_addr)
       end if;
    end process;
 
-process(cpu_bus_addr,   cpu_bus_enable,
+process(idle, addr, cpu_bus_enable,
         m0_window_base, m0_window_mask,
         m1_window_base, m1_window_mask,
         m2_window_base, m2_window_mask)
    begin
       active <= (others => '0');
-      if cpu_bus_enable = '1' then
-         if (cpu_bus_addr and m0_window_mask) = m0_window_base then
-            active(0) <= '1';
-         end if;
+      if use_clk = '1' then
+         if idle = '0' then      
+            if (addr and m0_window_mask) = m0_window_base then
+               active(0) <= '1';
+            end if;
 
-         if (cpu_bus_addr and m1_window_mask) = m1_window_base then
-            active(1) <= '1';
-         end if;
+            if (addr and m1_window_mask) = m1_window_base then
+               active(1) <= '1';
+            end if;
 
-         if (cpu_bus_addr and m2_window_mask) = m2_window_base then
-            active(2) <= '1';
+            if (addr and m2_window_mask) = m2_window_base then
+               active(2) <= '1';
+            end if;
+         end if;
+      else
+         if cpu_bus_enable = '1' then      
+            if (addr and m0_window_mask) = m0_window_base then
+               active(0) <= '1';
+            end if;
+
+            if (addr and m1_window_mask) = m1_window_base then
+               active(1) <= '1';
+            end if;
+
+            if (addr and m2_window_mask) = m2_window_base then
+               active(2) <= '1';
+            end if;
          end if;
       end if;
    end process;
 
-process(read_data, cpu_bus_addr)
+process(clk)
    begin
-      case cpu_bus_addr(1 downto 0) is
-         when "00"   => cpu_bus_din <= read_data(31 downto 0);
-         when "01"   => cpu_bus_din <= x"00" & read_data(31 downto 8);
-         when "10"   => cpu_bus_din <= x"0000" & read_data(31 downto 16);
-         when "11"   => cpu_bus_din <= x"000000" & read_data(31 downto 24);
-         when others => cpu_bus_din <= read_data(31 downto 0);
-      end case;
-   end process;
+   if rising_edge(clk) then
+      idle <= '1';
+      if cpu_bus_enable = '1' then
+      -- Take note of if the bus is currently busy
+         idle <= not busy;
+         -- Hold the address and write info in local registers.
+         -- This is needed to give an endpoint for static timing analysis
+         -- even if we don't expect these to change during the transaction.
+         latched_addr       <= cpu_bus_addr;
+         latched_write_data <= cpu_bus_dout;
+         latched_width      <= cpu_bus_width;
+         latched_write      <= cpu_bus_write;
+      end if;
+   end if;
+end process;
 
+------------------------------------
+-- Work out which data is being read
+------------------------------------
 process(active, m0_bus_read_data, m1_bus_read_data, m2_bus_read_data)
    begin
       case active is
@@ -175,6 +222,20 @@ process(active, m0_bus_read_data, m1_bus_read_data, m2_bus_read_data)
          when "010"  => read_data <= m1_bus_read_data;
          when "100"  => read_data <= m2_bus_read_data;
          when others => read_data <= m2_bus_read_data; -- Multiple active (most likely an error!)
+      end case;
+   end process;
+
+-------------------------------------------
+-- Correct alignment and send it to the CPU
+-------------------------------------------
+process(read_data, addr)
+   begin
+      case addr(1 downto 0) is
+         when "00"   => cpu_bus_din <= read_data(31 downto 0);
+         when "01"   => cpu_bus_din <= x"00" & read_data(31 downto 8);
+         when "10"   => cpu_bus_din <= x"0000" & read_data(31 downto 16);
+         when "11"   => cpu_bus_din <= x"000000" & read_data(31 downto 24);
+         when others => cpu_bus_din <= read_data(31 downto 0);
       end case;
    end process;
 

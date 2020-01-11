@@ -46,8 +46,10 @@ end entity;
 
 architecture Behavioral of basys3_top_level is
     component top_level_expanded is
-    generic ( clock_freq    : natural := 50000000;
-              minimize_size : STD_LOGIC := '1');
+    generic ( clock_freq           : natural   := 50000000;
+              bus_bridge_use_clk   : std_logic := '1';
+              bus_expander_use_clk : std_logic := '1';
+              cpu_minimize_size    : std_logic := '1');
     port ( clk              : in  STD_LOGIC;
            uart_rxd_out     : out STD_LOGIC := '1';
            uart_txd_in      : in  STD_LOGIC;
@@ -121,12 +123,17 @@ begin
       CLKFBIN => fb      -- 1-bit input: Feedback clock
    );
 
-i_top_level_expanded: top_level_expanded generic map ( clock_freq => 50000000, minimize_size => '1') port map (
-    clk          => clk,
-    uart_rxd_out => uart_rxd_out,
-    uart_txd_in  => uart_txd_in,
-    gpio         => led,
-    debug_sel    => "00000",
-    debug_data   => open);
+i_top_level_expanded: top_level_expanded generic map ( 
+        clock_freq           => 50000000, 
+        bus_bridge_use_clk   => '0',
+        bus_expander_use_clk => '0',
+        cpu_minimize_size    => '1'
+    ) port map (
+        clk          => clk,
+        uart_rxd_out => uart_rxd_out,
+        uart_txd_in  => uart_txd_in,
+        gpio         => led,
+        debug_sel    => "00000",
+        debug_data   => open);
 end Behavioral;
 
