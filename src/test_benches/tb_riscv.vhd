@@ -39,8 +39,8 @@ end tb_riscv;
 
 architecture Behavioral of tb_riscv is
 
-    constant bus_bridge_use_clk   : std_logic := '1'; 
-    constant bus_expander_use_clk : std_logic := '1'; 
+    constant bus_bridge_use_clk   : std_logic := '0'; 
+    constant bus_expander_use_clk : std_logic := '0'; 
 
     component top_level_expanded is
     generic ( clock_freq           : natural   := 50000000;

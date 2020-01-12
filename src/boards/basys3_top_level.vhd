@@ -45,6 +45,13 @@ entity basys3_top_level is
 end entity;
 
 architecture Behavioral of basys3_top_level is
+    constant ext_clock_rate       : natural   := 100000000;
+    constant multiplier           : real      := 10.000;
+    constant divider              : real      := 14.750;
+    constant bus_bridge_use_clk   : std_logic := '0';
+    constant bus_expander_use_clk : std_logic := '0';
+    constant cpu_minimize_size    : std_logic := '0';
+
     component top_level_expanded is
     generic ( clock_freq           : natural   := 50000000;
               bus_bridge_use_clk   : std_logic := '1';
@@ -64,7 +71,7 @@ begin
    MMCME2_BASE_inst : MMCME2_BASE
    generic map (
       BANDWIDTH => "OPTIMIZED",  -- Jitter programming (OPTIMIZED, HIGH, LOW)
-      CLKFBOUT_MULT_F => 10.0,    -- Multiply value for all CLKOUT (2.000-64.000).
+      CLKFBOUT_MULT_F => multiplier,    -- Multiply value for all CLKOUT (2.000-64.000).
       CLKFBOUT_PHASE => 0.0,     -- Phase offset in degrees of CLKFB (-360.000-360.000).
       CLKIN1_PERIOD => 0.0,      -- Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
       -- CLKOUT0_DIVIDE - CLKOUT6_DIVIDE: Divide amount for each CLKOUT (1-128)
@@ -74,7 +81,7 @@ begin
       CLKOUT4_DIVIDE => 1,
       CLKOUT5_DIVIDE => 1,
       CLKOUT6_DIVIDE => 1,
-      CLKOUT0_DIVIDE_F => 20.000,   -- Divide amount for CLKOUT0 (1.000-128.000).
+      CLKOUT0_DIVIDE_F => divider,   -- Divide amount for CLKOUT0 (1.000-128.000).
       -- CLKOUT0_DUTY_CYCLE - CLKOUT6_DUTY_CYCLE: Duty cycle for each CLKOUT (0.01-0.99).
       CLKOUT0_DUTY_CYCLE => 0.5,
       CLKOUT1_DUTY_CYCLE => 0.5,
@@ -124,10 +131,10 @@ begin
    );
 
 i_top_level_expanded: top_level_expanded generic map ( 
-        clock_freq           => 50000000, 
-        bus_bridge_use_clk   => '1',
-        bus_expander_use_clk => '1',
-        cpu_minimize_size    => '0'
+        clock_freq           => natural(real(ext_clock_rate)/divider), 
+        bus_bridge_use_clk   => bus_bridge_use_clk,
+        bus_expander_use_clk => bus_expander_use_clk,
+        cpu_minimize_size    => cpu_minimize_size
     ) port map (
         clk          => clk,
         uart_rxd_out => uart_rxd_out,

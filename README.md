@@ -64,9 +64,59 @@ It's not hard - as long as you get the right RISC-V GNU toolchain installed.
 
 You should now have a bitstream for Basys3 in ./bitstreams - program it and connect to the serial port at 19200.
 
+## Performance/size in different configurations:
+
+All configurations include a serial port, a GPIO port and a millisecond counter. These were contrainted to where timing was just met.
+
+    +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
+    | Constraint | Clock MHz | Clocked Bus Bridge | Clocked Bus Expander | Minimize CPU Size  | LUTs   | FFs | CPU LUTs | CPU FFs|
+    +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
+    | 20.000 ns  | 50.00 MHz |        No          |         No           |         Yes        |  891   | 301 |    597   |   30   |
+    | 17.625 ns  | 56.73 MHz |        No          |         No           |         Yes        |  941   | 306 |    620   |   30   |
+    | 16.375 ns  | 61.06 MHz |        No          |        Yes           |         Yes        |  920   | 347 |    598   |   30   |
+    | 14.750 ns  | 67.79 MHz |        No          |         No           |          No        | 1108   | 307 |    781   |   31   |
+    | 13.625 ns  | 73.39 MHz |       Yes          |         No           |         Yes        |  909   | 377 |    597   |   30   |
+    | 12.500 ns  | 80.00 MHz |       Yes          |         No           |          No        | 1078   | 375 |    762   |   31   |
+    +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
+
+The "Clocked Bus Bridge" adds a cycle of latency to memory accesses, making loads take three cycles and stores take two cycles. "Clocked Bus Expander" adds an additional cycle of latency when tlaking with peripherals connected to it.
+
+Usage when constained to 50 MHz, with three peripherals, with clocks not used in the bus bridge or bus expander:
+
+    +----------------------------+--------------------+------------+------------+---------+------+-----+--------+
+    |          Instance          |       Module       | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 |
+    +----------------------------+--------------------+------------+------------+---------+------+-----+--------+
+    | basys3_top_level           |              (top) |        891 |        834 |      48 |    9 | 301 |      2 |
+    |   (basys3_top_level)       |              (top) |          0 |          0 |       0 |    0 |   0 |      0 |
+    |   i_top_level_expanded     | top_level_expanded |        891 |        834 |      48 |    9 | 301 |      2 |
+    |     (i_top_level_expanded) | top_level_expanded |          1 |          0 |       0 |    1 |   1 |      0 |
+    |     i_bus_bridge           |         bus_bridge |        102 |        102 |       0 |    0 |   0 |      0 |
+    |     i_bus_expander         |       bus_expander |         42 |         42 |       0 |    0 |   0 |      0 |
+    |     i_peripheral_gpio      |    peripheral_gpio |         35 |         35 |       0 |    0 |  81 |      0 |
+    |     i_peripheral_millis    |  peripheral_millis |         42 |         42 |       0 |    0 |  84 |      0 |
+    |     i_peripheral_serial    |  peripheral_serial |         67 |         59 |       0 |    8 | 103 |      0 |
+    |     i_program_memory       |     program_memory |          5 |          5 |       0 |    0 |   1 |      1 |
+    |     i_ram_memory           |         ram_memory |          1 |          1 |       0 |    0 |   1 |      1 |
+    |     i_riscv_cpu            |          riscv_cpu |        597 |        549 |      48 |    0 |  30 |      0 |
+    |       i_alu                |                alu |        144 |        144 |       0 |    0 |   0 |      0 |
+    |       i_branch_test        |        branch_test |         29 |         29 |       0 |    0 |   0 |      0 |
+    |       i_data_bus_mux_a     |     data_bus_mux_a |         32 |         32 |       0 |    0 |   0 |      0 |
+    |       i_data_bus_mux_b     |     data_bus_mux_b |         22 |         22 |       0 |    0 |   0 |      0 |
+    |       i_decoder            |            decoder |         66 |         66 |       0 |    0 |   0 |      0 |
+    |       i_program_counter    |    program_counter |         86 |         86 |       0 |    0 |  30 |      0 |
+    |       i_register_file      |      register_file |         49 |          1 |      48 |    0 |   0 |      0 |
+    |       i_result_bus_mux     |     result_bus_mux |         32 |         32 |       0 |    0 |   0 |      0 |
+    |       i_shifter            |            shifter |        113 |        113 |       0 |    0 |   0 |      0 |
+    |       i_sign_extender      |      sign_extender |         24 |         24 |       0 |    0 |   0 |      0 |
+    +----------------------------+--------------------+------------+------------+---------+------+-----+--------+
+
+Smaller, faster systems are possible by taking short cuts - for example, if you don't fully decode the program memory address
+space you can save two levels of logic, and clock closer to 90 MHz.
+
 ## Say thanks!
 This design is licensed under the MIT license, so you are pretty much free to do whatever you want with it.
 
 If you find this really useful please drop me an email to say thanks. I'll love to hear what you are doing with it.
 
 If you find this really useful or is used commercially, consider buying me a virtual pizza, virtual beer or virtual dinner via PayPal.
+
