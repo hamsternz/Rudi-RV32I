@@ -66,6 +66,23 @@ You should now have a bitstream for Basys3 in ./bitstreams - program it and conn
 
 ## Performance/size in different configurations:
 
+Different configurations can be configured by setting the generics on the top level design:
+
+    component top_level_expanded is
+    generic ( clock_freq           : natural   := 50000000;
+              bus_bridge_use_clk   : std_logic := '1';
+              bus_expander_use_clk : std_logic := '1';
+              cpu_minimize_size    : std_logic := '1');
+    port ( clk              : in  STD_LOGIC;
+           uart_rxd_out     : out STD_LOGIC := '1';
+           uart_txd_in      : in  STD_LOGIC;
+           gpio             : inout std_logic_vector(15 downto 0);
+           debug_sel        : in  STD_LOGIC_VECTOR(4 downto 0);
+           debug_data       : out STD_LOGIC_VECTOR(31 downto 0));
+    end component;
+
+(clock_freq is used to work out baud rate dividers - it does not actually set the clock frequency)
+
 All configurations include a serial port, a GPIO port and a millisecond counter. These were contrainted to where timing was just met.
 
     +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
