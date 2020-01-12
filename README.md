@@ -83,7 +83,7 @@ Different configurations can be configured by setting the generics on the top le
 
 (clock_freq is used to work out baud rate dividers - it does not actually set the clock frequency)
 
-All configurations include a serial port, a GPIO port and a millisecond counter. These were contrainted to where timing was just met.
+All configurations include a serial port, a GPIO port and a millisecond counter. Apart fgrom the first line these were contrainted to where timing was just met.
 
     +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
     | Constraint | Clock MHz | Clocked Bus Bridge | Clocked Bus Expander | Minimize CPU Size  | LUTs   | FFs | CPU LUTs | CPU FFs|
@@ -96,7 +96,7 @@ All configurations include a serial port, a GPIO port and a millisecond counter.
     | 12.500 ns  | 80.00 MHz |       Yes          |         No           |          No        | 1078   | 375 |    762   |   31   |
     +------------+-----------+--------------------+----------------------+--------------------+-- -----+-----+----------+--------+
 
-The "Clocked Bus Bridge" adds a cycle of latency to memory accesses, making loads take three cycles and stores take two cycles. "Clocked Bus Expander" adds an additional cycle of latency when tlaking with peripherals connected to it.
+The "Bus Bridge Use Clock" opotion adds a cycle of latency to memory accesses, making loads take three cycles and stores take two cycles. "Bus Expander Use Clock" adds a cycle of latency when talking with peripherals connected to it. Usually if you use the "Clocked Bus Bridge" You would have no need to clock the Bus Expander.
 
 Usage when constained to 50 MHz, with three peripherals, with clocks not used in the bus bridge or bus expander:
 
