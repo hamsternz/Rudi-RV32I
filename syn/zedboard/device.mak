@@ -1,0 +1,1 @@
+DEVICE ?= xc7z020-clg484-1
