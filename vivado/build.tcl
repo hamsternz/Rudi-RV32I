@@ -67,12 +67,16 @@ read_xdc ../src/boards/basys3.xdc
 
 # Synthesize Design
 synth_design -top basys3_top_level -part "xc7a35tcpg236-1" -flatten_hierarchy none
+write_checkpoint basys3_top_level_synth.dcp
+
 # Opt Design 
 opt_design
 # Place Design
 place_design 
 # Route Design
 route_design
+
+write_checkpoint basys3_top_level_route.dcp
 
 # Write the bitstream	
 write_bitstream -force -file ../bitstreams/basys3_top_level.bit
