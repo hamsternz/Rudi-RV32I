@@ -10,16 +10,18 @@
 # Key project names and directories
 # Note: The top level HDL file must be named ${PROJECT}_top_level
 #       The build system expects it to be placed in Rudi-RV32I\src\boards\${PROJECT}
-PROJECT = basys3
-DEVICE  = xc7a35tcpg236-1
-OUT_DIR = ${DEVICE}
+PROJECT     ?= basys3
+PROJECT_TOP ?= ${PROJECT}_top_level
 
-PROJECT_TOP = ${PROJECT}_top_level
+# Set the FPGA device and output directory
+include ${PROJECT}/device.mak
+OUT_DIR  = ${PROJECT}/${DEVICE}
+
 
 # =========================================================================
 # Build names
-SYNTH_NAME = ${PROJECT}_synth
-ROUTE_NAME = ${PROJECT}_route
+SYNTH_NAME = synth
+ROUTE_NAME = route
 
 
 # =========================================================================
@@ -49,16 +51,16 @@ all: synth route
 
 # 00b - Housekeeping
 clean:
-	rm -fR .Xil ${OUT_DIR}
+	rm -fR .Xil ${PROJECT}/${DEVICE}
 
 clean_all:
-	rm -fR .Xil ${OUT_DIR} ${PROJECT}.bit
+	rm -fR .Xil ${PROJECT}/${DEVICE} ${PROJECT}/${PROJECT}.bit
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 01 - Synthesis
 .PHONY: synth
 synth: ${OUT_DIR}/${SYNTH_NAME}.dcp
-${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/boards/${PROJECT}/${PROJECT_TOP}.vhd ${SYNTH_NAME}.tcl
+${OUT_DIR}/${SYNTH_NAME}.dcp : ../src/boards/${PROJECT}/${PROJECT_TOP}.vhd ${SYNTH_NAME}.tcl
 
 # Invoke the synthesis script
 	@echo

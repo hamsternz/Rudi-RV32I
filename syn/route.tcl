@@ -65,4 +65,4 @@ write_checkpoint ${OUT_DIR}/${ROUTE_DCP}.dcp -force
 # Write a bitstream for the current design.
 #   Options used are:
 #     -force : Overwrite existing file
-write_bitstream ${PROJECT}.bit -force
+write_bitstream ${PROJECT}/${PROJECT}.bit -force

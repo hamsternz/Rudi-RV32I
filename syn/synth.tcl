@@ -23,12 +23,28 @@ set_property target_language VHDL [ current_project ]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Load the project's source files
+# If a common HDL filelist exists, then load that file first
+if { [file exists "common/hdl_filelist.tcl"] == 1} {
+	cd common
+	source hdl_filelist.tcl
+	cd ..
+}
+cd ${PROJECT}
 source hdl_filelist.tcl
+cd ..
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Read physical and timing constraints from one of more files
+# If a common set of constraints exists, then load that file first
+if { [file exists "common/constraint_filelist.tcl"] == 1} {
+	cd common
+	source constraint_filelist.tcl
+	cd ..
+}
+cd ${PROJECT}
 source constraint_filelist.tcl
+cd ..
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

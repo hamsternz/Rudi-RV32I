@@ -1,3 +1,5 @@
+# These are files that are common to any boards
+
 # read all design files
 read_vhdl ../../src/systems/top_level_expanded.vhd
 
@@ -25,6 +27,3 @@ read_vhdl ../../src/peripheral/peripheral_gpio.vhd
 read_vhdl ../../src/peripheral/peripheral_ram.vhd
 read_vhdl ../../src/peripheral/peripheral_serial.vhd
 read_vhdl ../../src/peripheral/peripheral_millis.vhd
-
-# board specific stuff
-read_vhdl ../../src/boards/basys3/basys3_top_level.vhd
