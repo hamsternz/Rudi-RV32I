@@ -53,7 +53,7 @@ cd ..
 #   Options used are:
 #     -top  : Specify the top module name
 #     -part : Target part
-synth_design -top ${PROJECT_TOP} -part ${DEVICE}
+synth_design -top ${PROJECT_TOP} -part ${DEVICE} -flatten_hierarchy none
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
