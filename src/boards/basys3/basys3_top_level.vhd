@@ -131,7 +131,7 @@ begin
    );
 
 i_top_level_expanded: top_level_expanded generic map ( 
-        clock_freq           => natural(real(ext_clock_rate)/divider), 
+        clock_freq           => natural(real(ext_clock_rate)*multiplier/divider), 
         bus_bridge_use_clk   => bus_bridge_use_clk,
         bus_expander_use_clk => bus_expander_use_clk,
         cpu_minimize_size    => cpu_minimize_size
